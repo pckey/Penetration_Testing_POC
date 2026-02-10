@@ -28,32 +28,24 @@ jobs:
       # --- 同步 master ---
       - name: Sync master (ignore workflow)
         run: |
-          if git show-ref --verify --quiet refs/remotes/upstream/master; then
-            git checkout master || git checkout -b master
-            git merge upstream/master --no-edit || exit 1
+          git checkout master || git checkout -b master
+          git merge upstream/master --no-edit || exit 1
 
-            # 恢复本地 workflow 文件（重要）
-            git restore .github/workflows || true
+          # 强制覆盖 workflow 为 origin 的版本（最彻底，不会推 workflow）
+          git checkout origin/master -- .github/workflows || true
 
-            # 取消暂存区中的 workflow 修改（关键步骤）
-            git reset HEAD .github/workflows || true
+          # 防止暂存区仍有 workflow 变动
+          git reset HEAD .github/workflows || true
 
-            git push origin master
-          else
-            echo "Upstream has no master branch. Skip."
-          fi
+          git push origin master
 
       # --- 同步 rss-automation ---
       - name: Sync rss-automation (ignore workflow)
         run: |
-          if git show-ref --verify --quiet refs/remotes/upstream/rss-automation; then
-            git checkout rss-automation || git checkout -b rss-automation
-            git merge upstream/rss-automation --no-edit || exit 1
+          git checkout rss-automation || git checkout -b rss-automation
+          git merge upstream/rss-automation --no-edit || exit 1
 
-            git restore .github/workflows || true
-            git reset HEAD .github/workflows || true
+          git checkout origin/rss-automation -- .github/workflows || true
+          git reset HEAD .github/workflows || true
 
-            git push origin rss-automation
-          else
-            echo "Upstream has no rss-automation branch. Skip."
-          fi
+          git push origin rss-automation || true

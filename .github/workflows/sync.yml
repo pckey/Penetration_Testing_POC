@@ -2,8 +2,8 @@ name: Sync Fork (master & rss-automation, ignore workflows)
 
 on:
   schedule:
-    - cron: "0 3 * * *"     # 每天凌晨3点
-  workflow_dispatch:        # 手动触发
+    - cron: "0 3 * * *"
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -25,26 +25,35 @@ jobs:
           git remote add upstream https://github.com/Mr-xn/Penetration_Testing_POC.git
           git fetch upstream
 
-      # ---- 同步 master 分支 ----
-      - name: Sync master (ignore workflows)
+      # --- 同步 master ---
+      - name: Sync master (ignore workflow)
         run: |
           if git show-ref --verify --quiet refs/remotes/upstream/master; then
             git checkout master || git checkout -b master
             git merge upstream/master --no-edit || exit 1
+
+            # 恢复本地 workflow 文件（重要）
             git restore .github/workflows || true
+
+            # 取消暂存区中的 workflow 修改（关键步骤）
+            git reset HEAD .github/workflows || true
+
             git push origin master
           else
-            echo "Upstream has no master branch, skip."
+            echo "Upstream has no master branch. Skip."
           fi
 
-      # ---- 同步 rss-automation 分支 ----
-      - name: Sync rss-automation (ignore workflows)
+      # --- 同步 rss-automation ---
+      - name: Sync rss-automation (ignore workflow)
         run: |
           if git show-ref --verify --quiet refs/remotes/upstream/rss-automation; then
             git checkout rss-automation || git checkout -b rss-automation
             git merge upstream/rss-automation --no-edit || exit 1
+
             git restore .github/workflows || true
+            git reset HEAD .github/workflows || true
+
             git push origin rss-automation
           else
-            echo "Upstream has no rss-automation branch, skip."
+            echo "Upstream has no rss-automation branch. Skip."
           fi
